@@ -21,12 +21,24 @@ from products.models import CoffeePod, CoffeeMachine
 
 
 @api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
+# @permission_classes([permissions.IsAuthenticated])
 @renderer_classes([JSONRenderer, BrowsableAPIRenderer])
 def coffee_machine_data(request: Request):
     result = {}
     try:
         qs = CoffeeMachine.objects.all().values()
+
+        # product type filter
+        product_type = request.query_params.get("product_type", "")
+        if product_type:
+            qs = qs.filter(product_type=product_type)
+
+        # water line filter
+        water_line = request.query_params.get("water_line", "")
+        if water_line == "true":
+            qs = qs.filter(water_line_compatible=True)
+        elif water_line == "false":
+            qs = qs.filter(water_line_compatible=False)
 
         result["coffee_machines"] = qs
         return Response(status=status.HTTP_200_OK, data=result)
@@ -34,8 +46,9 @@ def coffee_machine_data(request: Request):
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error in coffee machines": f"{e}"})\
 
 
+
 @api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
+# @permission_classes([permissions.IsAuthenticated])
 @renderer_classes([JSONRenderer, BrowsableAPIRenderer])
 def coffee_pod_data(request: Request):
     result = {}
