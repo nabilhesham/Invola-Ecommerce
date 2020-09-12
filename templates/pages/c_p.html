@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Coffee Pod{% endblock%}
+
+{% block header %}
+    <div class="row " style="justify-content: flex-end;">
+      <div class="col-4">
+        <div class="page-title-box">
+          {% if bread_crumbs %}
+            <div class="page-title-right">
+              <ol class="breadcrumb m-0" style="    justify-content: flex-end;">
+                {% for bread_crumb in bread_crumbs %}
+                  <li class="breadcrumb-item">{{ bread_crumb }}</li>
+                {% endfor %}
+              </ol>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-12">
+          <div class="">
+            <div style="float:left">
+            <h4 class="page-title">{{ page_title }}</h4>
+            </div>
+          </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+
+
+
+{% endblock %}
