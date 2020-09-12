@@ -28,11 +28,228 @@
           </div>
         </div>
     </div>
+
+    <hr>
 {% endblock %}
 
 {% block content %}
 
+    <div class="row">
+      <div class="col-xl-3">
+        <h4>Filters</h4>
+      </div>
+    </div>
+    <div class="row" id="filters">
+      <div class="col-xl-2">
+          <select class="custom-select" id="product_type">
+              <option disabled selected hidden>Select Product Type</option>
+              <option value="">All</option>
+              <option value="COFFEE_POD_LARGE">LARGE</option>
+              <option value="COFFEE_POD_SMALL">SMALL</option>
+              <option value="ESPRESSO_POD">ESPRESSO POD</option>
+          </select>
+      </div>
+      <div class="col-xl-2">
+          <select class="custom-select" id="coffee_flavor">
+              <option disabled selected hidden>Select Coffee Flavor</option>
+              <option value="">All</option>
+              <option value="COFFEE_FLAVOR_VANILLA">VANILLA</option>
+              <option value="COFFEE_FLAVOR_CARAMEL">CARAMEL</option>
+              <option value="COFFEE_FLAVOR_PSL">PSL</option>
+              <option value="COFFEE_FLAVOR_MOCHA">MOCHA</option>
+              <option value="COFFEE_FLAVOR_HAZELNUT">HAZELNUT</option>
+          </select>
+      </div>
+      <div class="col-xl-2">
+          <select class="custom-select" id="pack_size">
+              <option disabled selected hidden>Select Pack Size</option>
+              <option value="">All</option>
+              <option value="12">1 dozen</option>
+              <option value="36">3 dozen</option>
+              <option value="60">5 dozen</option>
+              <option value="84">7 dozen</option>
+          </select>
+      </div>
+      <div class="col-xl-2">
+        <button type="button" class="btn btn-primary waves-effect waves-light" id="submit_filter">Filter</button>
+        <button type="button" class="btn btn-secondary waves-effect waves-light" id="reset_filter">Reset</button>
+      </div>
+    </div>
+
+    <div class="row mt-3" id="coffee_pods_list" style="justify-content:center">
+    </div>
 
 
 
 {% endblock %}
+
+{% block extra_javascript %}
+<script>
+    var coffee_pod_api_url = '{{coffee_pod_api_url}}';
+
+    try{
+        $.ajax({
+            type: "GET",
+            dataType: "json",
+            url: coffee_pod_api_url,
+            success: function(data){
+                if (data){
+                  if (!jQuery.isEmptyObject(data['coffee_pods'])){
+                    render_coffee_pod_cards(data['coffee_pods'])
+                  }
+                }
+            }
+        });
+    }catch(error){
+        console.log(error)
+    };
+
+    // submit filter
+    $('#submit_filter').on('click', function(){
+        try{
+          var product_type = $('#product_type').val()
+          if (product_type){
+            coffee_pod_filter_api_url = coffee_pod_api_url +  `?product_type=${product_type}`
+          }else{
+            coffee_pod_filter_api_url = coffee_pod_api_url+'?'
+          }
+          var coffee_flavor = $('#coffee_flavor').val()
+          if (coffee_flavor){
+            coffee_pod_filter_api_url = coffee_pod_filter_api_url +  `&coffee_flavor=${coffee_flavor}`
+          }else{
+            coffee_pod_filter_api_url = coffee_pod_filter_api_url
+          }
+
+          var pack_size = Number($('#pack_size').val());
+          if (pack_size){
+            coffee_pod_filter_api_url = coffee_pod_filter_api_url +  `&pack_size=${pack_size}`
+          }else{
+            coffee_pod_filter_api_url = coffee_pod_filter_api_url
+          }
+          $.ajax({
+              type: "GET",
+              dataType: "json",
+              url: coffee_pod_filter_api_url,
+              success: function(data){
+                try{
+                  if (data){
+                      if (!jQuery.isEmptyObject(data['coffee_pods'])){
+                        render_coffee_pod_cards(data['coffee_pods']);
+                      }else{
+                        $('#coffee_pods_list').empty();
+                        $('#coffee_pods_list').append('<div class="col-xl-5 text-muted">No Coffee Pods Found ..</div>')
+                      }
+                  }
+                }catch(error){
+                  console.log(error)
+                };
+              }
+          });
+        }catch(error){
+          console.log(error)
+        };
+      });
+
+      // reset filter
+      $('#reset_filter').on('click', function(){
+        try{
+          $.ajax({
+              type: "GET",
+              dataType: "json",
+              url: coffee_pod_api_url,
+              success: function(data){
+                try{
+                  if (data){
+                    if(data['coffee_pods']){
+                        render_coffee_pod_cards(data['coffee_pods']);
+                        $('#product_type :nth-child(1)').prop('selected', true);
+                        $('#coffee_flavor :nth-child(1)').prop('selected', true);
+                        $('#pack_size :nth-child(1)').prop('selected', true);
+                    }
+                  }
+                }catch(error){
+                  console.log(error)
+                };
+              }
+          });
+        }catch(error){
+          console.log(error)
+        };
+      });
+
+    function render_coffee_pod_cards(data){
+        if (!jQuery.isEmptyObject(data)){
+            $('#coffee_pods_list').empty();
+            for (var item of data){
+                console.log(item)
+                $('#coffee_pods_list').append(`
+                    <div class="card mb-3 mt-3 col-sm-3 mr-2 ml-2" style="">
+                      <div class="row no-gutters">
+                        <div class="col-md-4">
+                          <img src="https://lanecove.s3.ap-southeast-2.amazonaws.com/wp-content/uploads/2016/08/04232833/shutterstock_352068635.jpg" height=180 class="card-img" alt="...">
+                        </div>
+                        <div class="col-md-8">
+                          <div class="card-body">
+                            <h5 class="card-title">Product: ${item['product_name']}</h5>
+                            <p class="card-text">Type: `+ get_product_type(item['product_type'])+`</p>
+                            <p class="card-text"><small class="text-muted">Flavor: `+get_product_flavor(item['coffee_flavor'])+`</small></p>
+                            <p class="card-text"><small class="text-muted">Pack Size: `+get_product_pack_size(item['pack_size'])+`</small></p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                `)
+
+            }
+        }
+    }
+
+
+    function get_product_type(slug){
+        let productsTypes = {
+            "COFFEE_POD_SMALL" : "SMALL",
+            "COFFEE_POD_LARGE" : "LARGE",
+            "ESPRESSO_POD" : "ESPRESSO POD",
+        }
+
+        if ( slug in  productsTypes){
+            return productsTypes[slug]
+        }else{
+            return slug
+        }
+    }
+
+    function get_product_flavor(slug){
+        let productsFlavors = {
+            "COFFEE_FLAVOR_VANILLA" : "VANILLA",
+            "COFFEE_FLAVOR_CARAMEL" : "CARAMEL",
+            "COFFEE_FLAVOR_PSL" : "PSL",
+            "COFFEE_FLAVOR_MOCHA" : "MOCHA",
+            "COFFEE_FLAVOR_HAZELNUT" : "HAZELNUT",
+        }
+
+        if ( slug in  productsFlavors){
+            return productsFlavors[slug]
+        }else{
+            return slug
+        }
+    }
+
+    function get_product_pack_size(num){
+        let productsPackSizes = {
+            12 : "1 dozen",
+            36 : "3 dozen",
+            60 : "5 dozen",
+            84 : "7 dozen",
+        }
+
+        if ( num in  productsPackSizes){
+            return productsPackSizes[num]
+        }else{
+            return slug
+        }
+    }
+
+</script>
+{% endblock %}
+
